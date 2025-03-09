@@ -58,42 +58,19 @@ def tool_detail(request, slug):
     return render(request, 'tools/detail.html', context)
 
 @login_required
-@check_subscription_limits
+@check_subscription_limits  # This decorator now handles the API call increment
 @require_http_methods(["POST"])
 def process_tool(request, slug):
     tool = get_object_or_404(Tool, slug=slug, status='active')
-    subscription = Subscription.objects.get(user=request.user)  # Get the subscription object
+    subscription = Subscription.objects.get(user=request.user)
     
     try:
         with transaction.atomic():
             input_data = json.loads(request.body)
             
-            # Validate input data against tool schema
-            input_schema = tool.input_format
-            if not isinstance(input_data, dict):
-                raise ValueError("Input must be a JSON object")
-
-            # Get required fields from schema
-            properties = input_schema.get('properties', {})
-            required_fields = list(properties.keys())  # Using all properties as required fields
-
-            # Validate each field against the schema
-            for field_name in required_fields:
-                if field_name not in input_data:
-                    raise ValueError(f"Missing required field: {field_name}")
-                
-                field_type = properties[field_name].get('type')
-                if field_type == 'string' and not isinstance(input_data[field_name], str):
-                    raise ValueError(f"Field '{field_name}' must be a string")
-
-            # Process the request
+            # Process tool logic here
             result = process_ai_request(tool, input_data)
             
-            # Update user's API call count
-            UserProfile.objects.filter(user=request.user).update(
-                api_calls_count=models.F('api_calls_count') + 1
-            )
-
             # Create usage record
             ToolUsage.objects.create(
                 user=request.user,
@@ -103,21 +80,14 @@ def process_tool(request, slug):
                 tokens_used=result['tokens_used'],
                 cost=result['cost']
             )
-
-            # Create activity record
-            UserActivity.objects.create(
-                user=request.user,
-                activity_type='tool_use',
-                description=f'Used tool: {tool.name}'
-            )
-
+            
             return JsonResponse({
                 'success': True,
                 'data': result['output'],
                 'usage': {
                     'tokens': result['tokens_used'],
                     'cost': result['cost'],
-                    'remaining_calls': subscription.plan.api_calls_limit - (request.user.userprofile.api_calls_count + 1)
+                    'remaining_calls': subscription.plan.api_calls_limit - request.user.userprofile.api_calls_count
                 }
             })
 
