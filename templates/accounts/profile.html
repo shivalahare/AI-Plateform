@@ -61,7 +61,12 @@
                 <div class="form-group">
                     <label>Notification Preferences</label>
                     <div class="checkbox-group">
-                        {{ form.notification_preferences }}
+                        {% for choice in form.notification_preferences %}
+                        <div class="checkbox-item">
+                            {{ choice.tag }}
+                            <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
 

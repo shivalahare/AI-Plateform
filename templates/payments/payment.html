@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="payment-details">
+        <h2>Complete Payment</h2>
+        <div class="plan-details">
+            <h3>{{ plan.name }}</h3>
+            <p>Amount: ₹{{ plan.price }}</p>
+        </div>
+        
+        <button id="rzp-button" class="btn btn-primary">Pay Now</button>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+    "key": "{{ razorpay_key }}",
+    "amount": "{{ amount }}",
+    "currency": "{{ currency }}",
+    "name": "Your Company Name",
+    "description": "{{ plan.name }} Subscription",
+    "order_id": "{{ order_id }}",
+    "handler": function (response){
+        // Submit form with payment details
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ callback_url }}";
+
+        var fields = {
+            'razorpay_payment_id': response.razorpay_payment_id,
+            'razorpay_order_id': response.razorpay_order_id,
+            'razorpay_signature': response.razorpay_signature
+        };
+
+        for(var key in fields) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = fields[key];
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    },
+    "prefill": {
+        "name": "{{ request.user.get_full_name }}",
+        "email": "{{ request.user.email }}"
+    },
+    "theme": {
+        "color": "#3399cc"
+    }
+};
+var rzp1 = new Razorpay(options);
+document.getElementById('rzp-button').onclick = function(e){
+    rzp1.open();
+    e.preventDefault();
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -42,3 +42,11 @@ class UserProfileForm(forms.ModelForm):
             self.fields['first_name'].initial = self.instance.user.first_name
             self.fields['last_name'].initial = self.instance.user.last_name
             self.fields['email'].initial = self.instance.user.email
+            
+            # Initialize notification preferences from the stored JSON
+            if self.instance.notification_preferences:
+                self.fields['notification_preferences'].initial = [
+                    pref for pref, enabled in 
+                    self.instance.notification_preferences.items() 
+                    if enabled
+                ]

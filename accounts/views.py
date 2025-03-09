@@ -4,6 +4,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from .forms import SignUpForm, UserProfileForm
 from .models import APIKey
+from dashboard.models import UserActivity 
 from billing.models import Subscription
 from django.utils import timezone
 import uuid
@@ -33,21 +34,43 @@ def profile(request):
 
             # Update UserProfile model fields
             profile = form.save(commit=False)
+            
+            # Properly handle notification preferences
+            selected_preferences = form.cleaned_data.get('notification_preferences', [])
             profile.notification_preferences = {
-                pref: True for pref in form.cleaned_data['notification_preferences']
+                'email_updates': 'email_updates' in selected_preferences,
+                'product_news': 'product_news' in selected_preferences,
+                'security_alerts': 'security_alerts' in selected_preferences,
+                'usage_reports': 'usage_reports' in selected_preferences
             }
+            
             profile.save()
-
+            # Add activity for profile update
+            UserActivity.objects.create(
+                user=request.user,
+                activity_type='profile_update',
+                description='Updated profile information'
+            )
             messages.success(request, 'Profile updated successfully!')
             return redirect('accounts:profile')
     else:
-        form = UserProfileForm(instance=request.user.userprofile)
+        # Initialize form with current preferences
+        initial_data = {
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email,
+            'notification_preferences': [
+                pref for pref, enabled in 
+                request.user.userprofile.notification_preferences.items() 
+                if enabled
+            ]
+        }
+        form = UserProfileForm(instance=request.user.userprofile, initial=initial_data)
 
-    # Get subscription information
+    # Get subscription information - UPDATED THIS PART
     try:
         subscription = Subscription.objects.get(
             user=request.user,
-            end_date__gte=timezone.now(),
             status='active'
         )
     except Subscription.DoesNotExist:

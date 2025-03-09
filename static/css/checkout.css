@@ -1,0 +1,165 @@
+.checkout-container {
+    max-width: 600px;
+    margin: 3rem auto;
+    padding: 0 var(--spacing-md);
+}
+
+.payment-details {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-2xl);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.payment-details h2 {
+    font-size: var(--text-2xl);
+    color: var(--text);
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+}
+
+.plan-details {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.plan-details h3 {
+    font-size: var(--text-xl);
+    color: var(--text);
+    margin-bottom: var(--spacing-sm);
+}
+
+.plan-details p {
+    color: var(--text-light);
+    font-size: var(--text-lg);
+}
+
+.price-amount {
+    font-size: var(--text-2xl);
+    color: var(--text);
+    font-weight: 600;
+    margin-top: var(--spacing-md);
+}
+
+.plan-features {
+    margin: var(--spacing-xl) 0;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-light);
+}
+
+.feature-item i {
+    color: var(--success);
+}
+
+#rzp-button {
+    width: 100%;
+    padding: var(--spacing-md);
+    font-size: var(--text-lg);
+    font-weight: 500;
+    margin-top: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+#rzp-button i {
+    font-size: 1.1em;
+}
+
+.secure-payment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    color: var(--text-light);
+    font-size: var(--text-sm);
+}
+
+.secure-payment i {
+    color: var(--success);
+}
+
+.payment-methods {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border);
+}
+
+.payment-method-icon {
+    width: 100px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: var(--spacing-xs);
+}
+
+.payment-method-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* ensures the image maintains its aspect ratio */
+}
+
+/* Payment method brand colors */
+.visa-color { color: #1A1F71; }
+.mastercard-color { color: #EB001B; }
+.rupay-color { color: #097A44; }
+.upi-color { color: #2D5EAA; }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .checkout-container {
+        margin: var(--spacing-lg) auto;
+    }
+
+    .payment-details {
+        padding: var(--spacing-xl);
+    }
+
+    .payment-details h2 {
+        font-size: var(--text-xl);
+    }
+
+    .price-amount {
+        font-size: var(--text-xl);
+    }
+}
+
+@media (max-width: 480px) {
+    .payment-details {
+        padding: var(--spacing-lg);
+    }
+
+    .plan-details {
+        padding: var(--spacing-md);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .payment-methods {
+        gap: var(--spacing-md);
+    }
+    
+    .payment-method-icon {
+        width: 48px;
+        height: 32px;
+    }
+}

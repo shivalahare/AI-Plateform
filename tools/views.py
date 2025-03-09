@@ -3,9 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-from .models import Tool, Category, ToolUsage
+from .models import Tool, Category, ToolUsage, models
 from dashboard.models import UserActivity  # Add this import
+from billing.models import Subscription
 import json
+from django.db import transaction
+from .decorators import check_subscription_limits
+from accounts.models import UserProfile
 
 @login_required
 def tool_list(request):
@@ -30,6 +34,12 @@ def tool_list(request):
 @login_required
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug, status='active')
+    # Add activity for tool view
+    UserActivity.objects.create(
+        user=request.user,
+        activity_type='tool_view',
+        description=f'Viewed tool: {tool.name}'
+    )
     recent_usage = ToolUsage.objects.filter(
         user=request.user,
         tool=tool
@@ -48,52 +58,138 @@ def tool_detail(request, slug):
     return render(request, 'tools/detail.html', context)
 
 @login_required
+@check_subscription_limits
 @require_http_methods(["POST"])
 def process_tool(request, slug):
     tool = get_object_or_404(Tool, slug=slug, status='active')
+    subscription = Subscription.objects.get(user=request.user)  # Get the subscription object
     
     try:
-        input_data = json.loads(request.body)
-        
-        # Here you would implement the actual AI processing logic
-        result = process_ai_request(tool, input_data)
-        
-        # Create ToolUsage record
-        usage = ToolUsage.objects.create(
-            user=request.user,
-            tool=tool,
-            tokens_used=result.get('tokens_used', 0),
-            cost=result.get('cost', 0),
-            success=True
-        )
+        with transaction.atomic():
+            input_data = json.loads(request.body)
+            
+            # Validate input data against tool schema
+            input_schema = tool.input_format
+            if not isinstance(input_data, dict):
+                raise ValueError("Input must be a JSON object")
 
-        # Create UserActivity record
-        UserActivity.objects.create(
-            user=request.user,
-            activity_type='tool_usage',
-            description=f'Used {tool.name} tool - {usage.tokens_used} tokens'
-        )
+            # Get required fields from schema
+            properties = input_schema.get('properties', {})
+            required_fields = list(properties.keys())  # Using all properties as required fields
 
-        return JsonResponse(result)
-        
+            # Validate each field against the schema
+            for field_name in required_fields:
+                if field_name not in input_data:
+                    raise ValueError(f"Missing required field: {field_name}")
+                
+                field_type = properties[field_name].get('type')
+                if field_type == 'string' and not isinstance(input_data[field_name], str):
+                    raise ValueError(f"Field '{field_name}' must be a string")
+
+            # Process the request
+            result = process_ai_request(tool, input_data)
+            
+            # Update user's API call count
+            UserProfile.objects.filter(user=request.user).update(
+                api_calls_count=models.F('api_calls_count') + 1
+            )
+
+            # Create usage record
+            ToolUsage.objects.create(
+                user=request.user,
+                tool=tool,
+                input_data=input_data,
+                output_data=result['output'],
+                tokens_used=result['tokens_used'],
+                cost=result['cost']
+            )
+
+            # Create activity record
+            UserActivity.objects.create(
+                user=request.user,
+                activity_type='tool_use',
+                description=f'Used tool: {tool.name}'
+            )
+
+            return JsonResponse({
+                'success': True,
+                'data': result['output'],
+                'usage': {
+                    'tokens': result['tokens_used'],
+                    'cost': result['cost'],
+                    'remaining_calls': subscription.plan.api_calls_limit - (request.user.userprofile.api_calls_count + 1)
+                }
+            })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON format'}, status=400)
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
     except Exception as e:
-        # Log error activity
-        UserActivity.objects.create(
-            user=request.user,
-            activity_type='error',
-            description=f'Error using {tool.name} tool: {str(e)}'
-        )
-        return JsonResponse({'error': str(e)}, status=400)
+        return JsonResponse({'success': False, 'error': 'Internal server error'}, status=500)
 
 def process_ai_request(tool, input_data):
     """
-    Placeholder for AI processing logic.
-    In a real implementation, this would integrate with your AI services.
+    Process the AI request and validate input against the tool's schema.
     """
-    # This is where you'd implement the actual AI processing
-    # For now, we'll return dummy data
-    return {
-        'output': {'result': 'Processed result would go here'},
-        'tokens_used': 100,
-        'cost': tool.cost_per_token * 100
-    }
+    try:
+        # Validate input data structure
+        if not isinstance(input_data, dict):
+            raise ValueError("Input must be a JSON object")
+
+        # Get schema properties
+        schema = tool.input_format
+        if not schema.get('type') == 'object' or 'properties' not in schema:
+            raise ValueError("Invalid schema format")
+
+        properties = schema['properties']
+
+        # Validate each field against the schema
+        for field_name, field_spec in properties.items():
+            # Check if field exists in input
+            if field_name in input_data:
+                # Validate field type
+                if field_spec.get('type') == 'string':
+                    if not isinstance(input_data[field_name], str):
+                        raise ValueError(f"Field '{field_name}' must be a string")
+                # Add more type validations as needed (number, boolean, etc.)
+
+        # Check for required fields if specified in schema
+        required_fields = schema.get('required', list(properties.keys()))
+        missing_fields = [
+            field for field in required_fields
+            if field not in input_data or not input_data[field]
+        ]
+
+        if missing_fields:
+            raise ValueError(f"Missing or empty required fields: {', '.join(missing_fields)}")
+
+        # Simulate AI processing
+        tokens_used = 100
+        cost = float(tool.cost_per_token * tokens_used)
+
+        # Generate output based on the tool type
+        if tool.name == "Story Writer Pro":
+            output = {
+                "title": f"A {input_data.get('genre', 'mysterious')} story",
+                "story": (
+                    f"Once upon a time in a {input_data.get('setting', 'distant land')}, "
+                    f"there was a {input_data.get('character_type', 'brave hero')}. "
+                    f"This is a {input_data.get('length', 'short')} {input_data.get('genre', 'story')} "
+                    f"about {input_data.get('theme', 'adventure')}..."
+                )
+            }
+        else:
+            # Default output for other tools
+            output = {
+                "result": f"Processed {tool.name} with input: {json.dumps(input_data)}"
+            }
+
+        return {
+            'output': output,
+            'tokens_used': tokens_used,
+            'cost': cost
+        }
+
+    except Exception as e:
+        raise ValueError(f"Error processing request: {str(e)}")

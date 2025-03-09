@@ -2,9 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
-from .models import Plan, Subscription, Invoice
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
+from .models import Plan, Subscription, Invoice
 import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -45,34 +45,48 @@ def subscription(request):
 
 @login_required
 def change_plan(request, plan_slug):
-    """Handle plan changes"""
     plan = get_object_or_404(Plan, slug=plan_slug, is_active=True)
     
-    current_subscription = Subscription.objects.filter(
-        user=request.user,
-        status='active'
-    ).first()
+    # If plan has a price, redirect to payment
+    if plan.price > 0:
+        try:
+            return redirect('payments:initiate_payment', plan_slug=plan_slug)
+        except Exception as e:
+            messages.error(request, "Error processing payment. Please try again later.")
+            return redirect('billing:pricing')
     
-    if current_subscription:
-        if current_subscription.plan == plan:
+    # For free plans, continue with existing logic
+    try:
+        current_subscription = Subscription.objects.filter(
+            user=request.user,
+            status='active',
+            end_date__gte=timezone.now()
+        ).first()
+        
+        if current_subscription and current_subscription.plan == plan:
             messages.info(request, "You are already subscribed to this plan.")
         else:
-            current_subscription.plan = plan
-            current_subscription.save()
-            messages.success(request, f"Successfully switched to {plan.name} plan!")
-    else:
-        # Set start_date to now and end_date to 1 month from now
-        start_date = timezone.now()
-        end_date = start_date + relativedelta(months=1)
-        
-        Subscription.objects.create(
-            user=request.user,
-            plan=plan,
-            status='active',
-            start_date=start_date,
-            end_date=end_date
-        )
-        messages.success(request, f"Successfully subscribed to {plan.name} plan!")
+            # If there's an existing subscription, update it
+            if current_subscription:
+                current_subscription.plan = plan
+                current_subscription.cancel_at_period_end = False
+                current_subscription.save()
+            else:
+                # Create new subscription for free plan
+                start_date = timezone.now()
+                end_date = start_date + relativedelta(months=1)
+                
+                Subscription.objects.create(
+                    user=request.user,
+                    plan=plan,
+                    status='active',
+                    start_date=start_date,
+                    end_date=end_date
+                )
+            messages.success(request, f"Successfully subscribed to {plan.name} plan!")
+            
+    except Exception as e:
+        messages.error(request, f"Error changing plan: {str(e)}")
     
     return redirect('billing:subscription')
 

@@ -118,9 +118,13 @@ pre code {
 }
 
 .json-input:focus {
+    border-color: var(--primary);
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color-alpha);
+}
+
+.json-input.error {
+    border-color: var(--error);
+    background-color: var(--error-bg);
 }
 
 .process-btn {
@@ -154,14 +158,37 @@ pre code {
 }
 
 .output-display {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
     background: var(--surface);
+    padding: 1.25rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 1.25rem;
-    min-height: 240px;
+    margin: 1rem 0;
+}
+
+.output-display pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.output-display code {
     font-family: 'Monaco', 'Consolas', monospace;
     font-size: var(--text-sm);
     line-height: 1.5;
+    display: block;
+    width: 100%;
+}
+
+/* For very long single words or strings */
+.output-display * {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .output-placeholder {
@@ -171,11 +198,15 @@ pre code {
 
 .error {
     color: var(--error);
-    padding: 1rem;
-    background: var(--error-light);
-    border-radius: var(--radius-md);
-    margin-top: 1rem;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border-radius: var(--radius-sm);
+}
+
+.error-message {
+    color: var(--error);
     font-size: var(--text-sm);
+    margin-top: 0.25rem;
 }
 
 /* Usage Info */

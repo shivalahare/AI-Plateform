@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="payment-details">
+        <h2>Complete Payment</h2>
+        <div class="plan-details">
+            <h3>{{ plan.name }} Plan</h3>
+            <p>Get access to premium features</p>
+            <div class="price-amount">₹{{ plan.price }}</div>
+        </div>
+
+        <div class="plan-features">
+            <div class="feature-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Unlimited API calls</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Priority support</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Advanced analytics</span>
+            </div>
+        </div>
+        
+        <button id="rzp-button" class="btn btn-primary">
+            <i class="fas fa-lock"></i>
+            <span>Pay Securely Now</span>
+        </button>
+
+        <div class="secure-payment">
+            <i class="fas fa-shield-alt"></i>
+            <span>Secure payment powered by Razorpay</span>
+        </div>
+
+        <div class="payment-methods">
+            <div class="payment-method-icon">
+                <img src="{% static 'images/visa.png' %}" alt="Visa" />
+            </div>
+            <div class="payment-method-icon">
+                <img src="{% static 'images/mastercard.png' %}" alt="Mastercard" />
+            </div>
+            <div class="payment-method-icon">
+                <img src="{% static 'images/rupay.png' %}" alt="RuPay" />
+            </div>
+            <div class="payment-method-icon">
+                <img src="{% static 'images/upi.png' %}" alt="UPI" />
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+    "key": "{{ razorpay_key }}",
+    "amount": "{{ amount }}",
+    "currency": "{{ currency }}",
+    "name": "Your Company Name",
+    "description": "{{ plan.name }} Plan Subscription",
+    "order_id": "{{ order_id }}",
+    "handler": function (response) {
+        window.location.href = "{% url 'payments:success' %}?razorpay_payment_id=" + response.razorpay_payment_id;
+    },
+    "prefill": {
+        "name": "{{ request.user.get_full_name }}",
+        "email": "{{ request.user.email }}"
+    },
+    "theme": {
+        "color": "#2563eb"
+    }
+};
+
+var rzp = new Razorpay(options);
+
+document.getElementById('rzp-button').onclick = function(e) {
+    rzp.open();
+    e.preventDefault();
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -8,6 +8,12 @@ from tools.models import ToolUsage  # Change to use ToolUsage instead of Usage
 
 @login_required
 def home(request):
+    # Add activity for dashboard visit
+    UserActivity.objects.create(
+        user=request.user,
+        activity_type='dashboard_visit',
+        description='Viewed dashboard home page'
+    )
     # Get date range for filtering
     end_date = timezone.now()
     start_date = end_date - timedelta(days=30)
@@ -78,6 +84,12 @@ def home(request):
 
 @login_required
 def statistics(request):
+    # Add activity for statistics view
+    UserActivity.objects.create(
+        user=request.user,
+        activity_type='statistics_view',
+        description='Viewed usage statistics'
+    )
     # Get monthly usage data
     monthly_usage = ToolUsage.objects.filter(
         user=request.user,

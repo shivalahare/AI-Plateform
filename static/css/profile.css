@@ -48,15 +48,28 @@
 }
 
 .checkbox-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
 }
 
-.checkbox-group label {
+.checkbox-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.checkbox-item label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: normal;
 }
 
 .subscription-info {

@@ -44,7 +44,9 @@
             <pre><code>{{ output_format|safe }}</code></pre>
 
             <h3>Output</h3>
-            <div id="outputData" class="output-display"></div>
+            <div id="outputData" class="output-display">
+                <!-- Output will be inserted here -->
+            </div>
             <div class="usage-info" style="display: none;">
                 <span>Tokens used: <span id="tokensCount">0</span></span>
                 <span>Cost: $<span id="costAmount">0.00</span></span>
@@ -71,44 +73,143 @@
 </div>
 
 <script>
-document.getElementById('processButton').addEventListener('click', async function() {
-    const button = this;
+document.addEventListener('DOMContentLoaded', function() {
+    const button = document.getElementById('processButton');
     const processingIndicator = document.getElementById('processingIndicator');
     const outputDisplay = document.getElementById('outputData');
     const usageInfo = document.querySelector('.usage-info');
-    
-    try {
+    const inputElement = document.getElementById('inputData');
+    const recentUsageList = document.querySelector('.usage-list');
+
+    function clearOutput() {
+        while (outputDisplay.firstChild) {
+            outputDisplay.removeChild(outputDisplay.firstChild);
+        }
+        usageInfo.style.display = 'none';
+        document.getElementById('tokensCount').textContent = '0';
+        document.getElementById('costAmount').textContent = '0.00';
+    }
+
+    function updateRecentUsage(usage) {
+        // Create new usage item
+        const usageItem = document.createElement('div');
+        usageItem.className = 'usage-item';
+        
+        const usageMeta = document.createElement('div');
+        usageMeta.className = 'usage-meta';
+        
+        // Format current date and time
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        usageMeta.innerHTML = `
+            <span>${formattedDate}</span>
+            <span>Tokens: ${usage.tokens}</span>
+            <span>Cost: $${usage.cost.toFixed(6)}</span>
+        `;
+        
+        usageItem.appendChild(usageMeta);
+
+        // Add the new usage item at the beginning of the list
+        if (recentUsageList) {
+            recentUsageList.insertBefore(usageItem, recentUsageList.firstChild);
+            
+            // Remove the last item if there are more than 5
+            const items = recentUsageList.getElementsByClassName('usage-item');
+            if (items.length > 5) {
+                recentUsageList.removeChild(items[items.length - 1]);
+            }
+        }
+    }
+
+    button.addEventListener('click', async () => {
+        clearOutput();
         button.disabled = true;
         processingIndicator.style.display = 'block';
-        outputDisplay.innerHTML = '<p class="output-placeholder">Processing...</p>';
-        
-        const inputData = JSON.parse(document.getElementById('inputData').value);
-        
-        const response = await fetch('{% url "tools:process" tool.slug %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify(inputData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            outputDisplay.innerHTML = '<pre><code>' + JSON.stringify(result.data, null, 2) + '</code></pre>';
-            document.getElementById('tokensCount').textContent = result.usage.tokens;
-            document.getElementById('costAmount').textContent = result.usage.cost.toFixed(6);
-            usageInfo.style.display = 'flex';
-        } else {
-            outputDisplay.innerHTML = '<p class="error">' + result.error + '</p>';
+        inputElement.classList.remove('error');
+
+        try {
+            let inputData = JSON.parse(inputElement.value);
+            
+            const response = await fetch('{% url "tools:process" tool.slug %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(inputData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to process request');
+            }
+
+            clearOutput();
+
+            if (result.success) {
+                const preElement = document.createElement('pre');
+                const codeElement = document.createElement('code');
+                codeElement.textContent = JSON.stringify(result.data, null, 2);
+                preElement.appendChild(codeElement);
+                outputDisplay.appendChild(preElement);
+                
+                document.getElementById('tokensCount').textContent = result.usage.tokens;
+                document.getElementById('costAmount').textContent = result.usage.cost.toFixed(6);
+                usageInfo.style.display = 'flex';
+
+                // Update recent usage list
+                updateRecentUsage(result.usage);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            const errorElement = document.createElement('p');
+            errorElement.className = 'error';
+            errorElement.textContent = 'Error: ' + error.message;
+            outputDisplay.appendChild(errorElement);
+        } finally {
+            button.disabled = false;
+            processingIndicator.style.display = 'none';
         }
-    } catch (error) {
-        outputDisplay.innerHTML = '<p class="error">Error: ' + (error.message || 'Invalid input format') + '</p>';
-    } finally {
-        button.disabled = false;
-        processingIndicator.style.display = 'none';
-    }
+    });
+
+    inputElement.addEventListener('input', function() {
+        clearOutput();
+        try {
+            const parsed = JSON.parse(this.value);
+            this.value = JSON.stringify(parsed, null, 2);
+            this.classList.remove('error');
+        } catch (e) {
+            this.classList.add('error');
+        }
+    });
+
+    // Add this to your existing JavaScript, after DOMContentLoaded
+    const inputFormat = {{ input_format|safe }};
+    const exampleInput = {
+        "genre": "fantasy",
+        "length": "short",
+        "theme": "adventure"
+    };
+
+    // Set the initial value of the textarea
+    inputElement.value = JSON.stringify(exampleInput, null, 2);
+
+    // Add placeholder text showing the expected format
+    inputElement.placeholder = `Example format:
+${JSON.stringify({
+    genre: "fantasy",
+    length: "short",
+    theme: "adventure"
+}, null, 2)}`;
 });
 </script>
 {% endblock %}

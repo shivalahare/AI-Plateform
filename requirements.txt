@@ -5,3 +5,5 @@ python-dotenv
 django-cors-headers
 reportlab
 python-dateutil
+razorpay
+setuptools
