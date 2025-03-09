@@ -1,0 +1,208 @@
+.tools-container {
+    max-width: var(--container-xl);
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+.tools-header {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.tools-header h1 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--text);
+}
+
+.category-filter {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.category-btn i {
+    font-size: 0.9em;
+}
+
+.category-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.category-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.tool-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tool-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.tool-icon {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-secondary);
+}
+
+.tool-icon img {
+    max-width: 64px;
+    max-height: 64px;
+}
+
+.tool-icon i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.tool-content {
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 200px;
+}
+
+.tool-content h3 {
+    margin: 0 0 var(--spacing-sm);
+    color: var(--text);
+}
+
+.tool-content p {
+    margin: 0 0 var(--spacing-md);
+    color: var(--text-light);
+    line-height: 1.5;
+    /* Add max height and ellipsis for long descriptions */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tool-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    margin-top: auto;
+}
+
+.tool-category {
+    font-size: var(--text-sm);
+    color: var(--text-light);
+    background: var(--background-secondary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+}
+
+.tool-cost {
+    font-size: var(--text-sm);
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--primary-color);
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    margin-top: auto;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.no-tools {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-2xl);
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    color: var(--text-light);
+}
+
+/* Pagination styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-2xl);
+}
+
+.pagination a, .pagination span {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.pagination a:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.pagination .current {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tools-container {
+        padding: var(--spacing-md);
+    }
+
+    .tools-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .category-filter {
+        overflow-x: auto;
+        padding-bottom: var(--spacing-sm);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .category-btn {
+        white-space: nowrap;
+    }
+}

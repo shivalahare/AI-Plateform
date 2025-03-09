@@ -1,0 +1,42 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up - AI Platform{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/accounts.css' %}">
+{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Create Account</h2>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-field">
+                    <div class="field-header">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.help_text %}
+                            <button type="button" class="info-button" data-tooltip="{{ field.help_text|striptags }}">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                    {{ field }}
+                    {% if field.errors %}
+                        <ul class="errorlist">
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Sign Up</button>
+        </form>
+        <div class="auth-links">
+            <a href="{% url 'accounts:login' %}">Already have an account? Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

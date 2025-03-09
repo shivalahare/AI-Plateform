@@ -1,0 +1,91 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - AI Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Welcome, {{ request.user.username }}</h1>
+        <p>Usage overview for {{ date_range.start }} - {{ date_range.end }}</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Usage Statistics Cards -->
+        <div class="dashboard-card">
+            <h3>Monthly Usage</h3>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Total Tokens</span>
+                    <span class="stat-value">{{ usage_stats.total_tokens }}</span>
+                    <span class="stat-subtitle">tokens this month</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Cost</span>
+                    <span class="stat-value">${{ usage_stats.total_cost }}</span>
+                    <span class="stat-subtitle">spent this month</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Daily Average</span>
+                    <span class="stat-value">{{ usage_stats.daily_average_tokens }}</span>
+                    <span class="stat-subtitle">tokens per day</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Daily Cost</span>
+                    <span class="stat-value">${{ usage_stats.daily_average_cost }}</span>
+                    <span class="stat-subtitle">average per day</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Most Used Tools -->
+        <div class="dashboard-card">
+            <h3>Most Used Tools</h3>
+            <div class="tools-list">
+                {% for tool in most_used_tools %}
+                <div class="tool-item">
+                    <div class="tool-info">
+                        <span class="tool-name">{{ tool.tool_name }}</span>
+                        <div class="tool-usage-bar">
+                            <div class="usage-progress" style="width: {{ tool.usage_percentage }}%"></div>
+                        </div>
+                    </div>
+                    <div class="tool-stats">
+                        <span class="tool-usage">{{ tool.total_uses }} uses</span>
+                        <span class="tool-percentage">{{ tool.usage_percentage|floatformat:1 }}%</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="empty-state">No tools used yet</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="dashboard-card full-width">
+            <h3>Recent Activity</h3>
+            <div class="activity-list">
+                {% for activity in recent_activity %}
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                    <div class="activity-content">
+                        <span class="activity-type">{{ activity.activity_type }}</span>
+                        <p class="activity-description">{{ activity.description }}</p>
+                        <span class="activity-time">{{ activity.created_at|timesince }} ago</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="empty-state">No recent activity</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

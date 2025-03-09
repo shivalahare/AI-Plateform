@@ -1,0 +1,96 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistics - AI Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="statistics-container">
+    <div class="statistics-header">
+        <h1>Usage Statistics</h1>
+        <p>Detailed analysis of your AI platform usage</p>
+    </div>
+
+    <div class="statistics-grid">
+        <!-- Monthly Usage Chart -->
+        <div class="chart-card">
+            <h3>Monthly Usage Trends</h3>
+            <canvas id="monthlyUsageChart"></canvas>
+        </div>
+
+        <!-- Tool Usage Breakdown -->
+        <div class="chart-card">
+            <h3>Tool Usage Distribution</h3>
+            <canvas id="toolUsageChart"></canvas>
+        </div>
+
+        <!-- Detailed Usage Table -->
+        <div class="usage-table-card">
+            <h3>Tool Usage Details</h3>
+            <table class="usage-table">
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Usage Count</th>
+                        <th>Total Tokens</th>
+                        <th>Total Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tool in tool_usage %}
+                    <tr>
+                        <td>{{ tool.tool_name }}</td>
+                        <td>{{ tool.usage_count }}</td>
+                        <td>{{ tool.total_tokens }}</td>
+                        <td>${{ tool.total_cost|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize charts with the data from the backend
+    const monthlyData = {{ monthly_usage|safe }};
+    const toolData = {{ tool_usage|safe }};
+    
+    // Monthly usage chart
+    new Chart(document.getElementById('monthlyUsageChart'), {
+        type: 'line',
+        data: {
+            labels: monthlyData.map(d => d.date__month),
+            datasets: [{
+                label: 'Tokens Used',
+                data: monthlyData.map(d => d.total_tokens),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        }
+    });
+
+    // Tool usage chart
+    new Chart(document.getElementById('toolUsageChart'), {
+        type: 'pie',
+        data: {
+            labels: toolData.map(d => d.tool_name),
+            datasets: [{
+                data: toolData.map(d => d.usage_count),
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF'
+                ]
+            }]
+        }
+    });
+</script>
+{% endblock %}

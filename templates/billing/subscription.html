@@ -1,0 +1,239 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load billing_tags %}
+
+{% block title %}Subscription Management - AI Platform{% endblock %}
+
+{% block content %}
+<div class="subscription-container">
+    <div class="subscription-header">
+        <h1>Subscription Management</h1>
+    </div>
+
+    {% if subscription %}
+    <div class="current-plan">
+        <div class="plan-details">
+            <h2>Current Plan: {{ subscription.plan.name }}</h2>
+            <div class="plan-info">
+                <div class="info-item">
+                    <span class="label">Status:</span>
+                    <span class="value status-{{ subscription.status }}">{{ subscription.status|title }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Started:</span>
+                    <span class="value">{{ subscription.start_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Renews:</span>
+                    <span class="value">{{ subscription.end_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Monthly Cost:</span>
+                    <span class="value">${{ subscription.plan.price }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="usage-stats">
+            <h3>Usage Statistics</h3>
+            <div class="usage-bar">
+                <div class="progress">
+                    {% with percentage=user.userprofile.api_calls_count|percentage:subscription.plan.api_calls_limit %}
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ percentage }}%"
+                         aria-valuenow="{{ percentage }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        {{ percentage }}%
+                    </div>
+                    {% endwith %}
+                </div>
+                <div class="usage-details">
+                    <span>{{ user.userprofile.api_calls_count|intcomma }} / {{ subscription.plan.api_calls_limit|intcomma }} API calls used</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="subscription-actions">
+            {% if not subscription.cancel_at_period_end %}
+            <form method="post" action="{% url 'billing:cancel_subscription' %}" class="cancel-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Cancel Subscription</button>
+            </form>
+            {% else %}
+            <div class="cancellation-notice">
+                <p>Your subscription will end on {{ subscription.end_date|date:"M d, Y" }}</p>
+                <form method="post" action="{% url 'billing:reactivate_subscription' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Reactivate Subscription</button>
+                </form>
+            </div>
+            {% endif %}
+            <a href="{% url 'billing:pricing' %}" class="btn btn-primary">Change Plan</a>
+        </div>
+    </div>
+
+    <div class="billing-history">
+        <h3>Billing History</h3>
+        <div class="invoice-list">
+            {% for invoice in invoices %}
+            <div class="invoice-item">
+                <div class="invoice-info">
+                    <span class="invoice-date">{{ invoice.created_at|date:"M d, Y" }}</span>
+                    <span class="invoice-amount">${{ invoice.amount }}</span>
+                    <span class="invoice-status status-{{ invoice.status }}">{{ invoice.status|title }}</span>
+                </div>
+                <div class="invoice-actions">
+                    <a href="{% url 'billing:invoice_pdf' invoice.id %}" class="btn btn-sm btn-outline">Download PDF</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% else %}
+    <div class="no-subscription">
+        <p>You don't have an active subscription.</p>
+        <a href="{% url 'billing:pricing' %}" class="btn btn-primary">View Plans</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subscription-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .subscription-header {
+        margin-bottom: 2rem;
+    }
+
+    .current-plan {
+        background: var(--card-bg);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .plan-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-item .label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .info-item .value {
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .usage-stats {
+        margin: 2rem 0;
+    }
+
+    .usage-bar {
+        margin-top: 1rem;
+    }
+
+    .progress {
+        height: 20px;
+        background: var(--bg-secondary);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: width 0.3s ease;
+    }
+
+    .usage-details {
+        margin-top: 0.5rem;
+        text-align: right;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .subscription-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .invoice-list {
+        margin-top: 1rem;
+    }
+
+    .invoice-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .invoice-info {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .status-active {
+        color: var(--success-color);
+    }
+
+    .status-cancelled {
+        color: var(--danger-color);
+    }
+
+    .status-past_due {
+        color: var(--warning-color);
+    }
+
+    .no-subscription {
+        text-align: center;
+        padding: 3rem;
+        background: var(--card-bg);
+        border-radius: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .subscription-actions {
+            flex-direction: column;
+        }
+
+        .invoice-item {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .invoice-info {
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}

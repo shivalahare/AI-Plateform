@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load billing_tags %}
+
+{% block title %}Pricing Plans - AI Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/billing.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pricing-container">
+    <div class="pricing-header">
+        <h1>Choose Your Perfect Plan</h1>
+        <p>Scale your AI capabilities with our flexible pricing options</p>
+    </div>
+
+    <div class="pricing-grid">
+        {% for plan in plans %}
+        <div class="pricing-card {% if plan.is_popular %}popular{% endif %}">
+            <div class="plan-header">
+                <h2>{{ plan.name }}</h2>
+                <div class="plan-price">
+                    <span class="currency">$</span>
+                    <span class="amount">{{ plan.price }}</span>
+                    <span class="period">/month</span>
+                </div>
+            </div>
+
+            <div class="plan-features">
+                <ul>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>{{ plan.api_calls_limit|intcomma }} API calls/month</span>
+                    </li>
+                    {% for feature, enabled in plan.features.items %}
+                    <li>
+                        <i class="fas {% if enabled %}fa-check{% else %}fa-times{% endif %}"></i>
+                        <span>{{ feature|replace_underscore }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="plan-action">
+                {% if request.user.is_authenticated %}
+                    {% if current_subscription and current_subscription.plan == plan %}
+                        <button class="btn btn-secondary" disabled>Current Plan</button>
+                    {% else %}
+                        <a href="{% url 'billing:change_plan' plan.slug %}" class="btn btn-primary">
+                            {% if current_subscription %}Switch to Plan{% else %}Subscribe Now{% endif %}
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'accounts:login' %}?next={% url 'billing:pricing' %}" 
+                       class="btn btn-primary">
+                        Login to Subscribe
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-plans-message">
+            <p>No pricing plans are currently available. Please check back later.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

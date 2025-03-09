@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome to AI Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero-section">
+        <h1>Welcome to AI Platform</h1>
+        <p>Your one-stop solution for AI-powered tools and services</p>
+        
+        {% if user.is_authenticated %}
+            <div class="action-buttons">
+                <a href="{% url 'dashboard:home' %}" class="btn btn-primary">Go to Dashboard</a>
+                <a href="{% url 'tools:list' %}" class="btn btn-secondary">Browse Tools</a>
+            </div>
+        {% else %}
+            <div class="action-buttons">
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary">Get Started</a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="features">
+        <h2>Our Services</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>AI Tools</h3>
+                <p>Access our comprehensive suite of AI-powered tools designed to enhance your productivity and streamline your workflow.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Analytics</h3>
+                <p>Track and analyze your usage with detailed insights, helping you make data-driven decisions for your projects.</p>
+            </div>
+            <div class="feature-card">
+                <h3>API Access</h3>
+                <p>Integrate our powerful AI services directly into your applications with our robust and well-documented API.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

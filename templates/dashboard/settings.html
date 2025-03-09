@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Account Settings</h1>
+    
+    <div class="settings-section">
+        <h2>Profile Information</h2>
+        <form method="post" class="settings-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ user.username }}" class="form-control" readonly>
+            </div>
+        </form>
+    </div>
+
+    <div class="settings-section">
+        <h2>Security</h2>
+        <div class="settings-actions">
+            <a href="{% url 'accounts:password_change' %}" class="btn btn-primary">Change Password</a>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h2>Preferences</h2>
+        <p>More settings options coming soon...</p>
+    </div>
+</div>
+{% endblock %}

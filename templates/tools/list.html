@@ -1,0 +1,78 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AI Tools - AI Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tool-list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="tools-container">
+    <div class="tools-header">
+        <h1>AI Tools</h1>
+        <div class="category-filter">
+            <a href="{% url 'tools:list' %}" class="category-btn {% if not selected_category %}active{% endif %}">
+                All
+            </a>
+            {% for category in categories %}
+            <a href="{% url 'tools:list' %}?category={{ category.slug }}" 
+               class="category-btn {% if selected_category == category.slug %}active{% endif %}">
+                <i class="fas {{ category.icon }}"></i>
+                {{ category.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="tools-grid">
+        {% for tool in page_obj %}
+        <div class="tool-card">
+            <div class="tool-icon">
+                {% if tool.icon %}
+                    <img src="{{ tool.icon.url }}" alt="{{ tool.name }}">
+                {% else %}
+                    <i class="fas {{ tool.category.icon }}"></i>
+                {% endif %}
+            </div>
+            <div class="tool-content">
+                <h3>{{ tool.name }}</h3>
+                <p>{{ tool.description|truncatewords:20 }}</p>
+                <div class="tool-meta">
+                    <span class="tool-category">{{ tool.category.name }}</span>
+                    <span class="tool-cost">{{ tool.cost_per_token }} / token</span>
+                </div>
+                <a href="{% url 'tools:detail' tool.slug %}" class="btn btn-primary">Use Tool</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-tools">
+            <p>No tools available in this category.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if selected_category %}&category={{ selected_category }}{% endif %}">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}">Previous</a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="current">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if selected_category %}&category={{ selected_category }}{% endif %}">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

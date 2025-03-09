@@ -1,0 +1,114 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tool.name }} - AI Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tool-detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="tool-detail-container">
+    <div class="tool-header">
+        <div class="tool-info">
+            <h1>{{ tool.name }}</h1>
+            <span class="tool-category">{{ tool.category.name }}</span>
+        </div>
+        <div class="tool-meta">
+            <span class="tool-cost">{{ tool.cost_per_token }} / token</span>
+            <span class="tool-status status-{{ tool.status }}">{{ tool.get_status_display }}</span>
+        </div>
+    </div>
+
+    <div class="tool-description">
+        <p>{{ tool.description }}</p>
+    </div>
+
+    <div class="tool-interface">
+        <div class="input-section">
+            <h3>Input Format</h3>
+            <pre><code>{{ input_format|safe }}</code></pre>
+            
+            
+            <h3>Input</h3>
+            <textarea id="inputData" class="json-input" rows="10"></textarea>
+            <button id="processButton" class="process-btn">Process</button>
+            <div id="processingIndicator" class="processing-indicator" style="display: none;">
+                Processing...
+            </div>
+        </div>
+        
+        <div class="output-section">
+            <h3>Output Format</h3>
+            <pre><code>{{ output_format|safe }}</code></pre>
+
+            <h3>Output</h3>
+            <div id="outputData" class="output-display"></div>
+            <div class="usage-info" style="display: none;">
+                <span>Tokens used: <span id="tokensCount">0</span></span>
+                <span>Cost: $<span id="costAmount">0.00</span></span>
+            </div>
+        </div>
+    </div>
+
+    {% if recent_usage %}
+    <div class="recent-usage">
+        <h3>Recent Usage</h3>
+        <div class="usage-list">
+            {% for usage in recent_usage %}
+            <div class="usage-item">
+                <div class="usage-meta">
+                    <span>{{ usage.created_at|date:"M d, Y H:i" }}</span>
+                    <span>Tokens: {{ usage.tokens_used }}</span>
+                    <span>Cost: ${{ usage.cost }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('processButton').addEventListener('click', async function() {
+    const button = this;
+    const processingIndicator = document.getElementById('processingIndicator');
+    const outputDisplay = document.getElementById('outputData');
+    const usageInfo = document.querySelector('.usage-info');
+    
+    try {
+        button.disabled = true;
+        processingIndicator.style.display = 'block';
+        outputDisplay.innerHTML = '<p class="output-placeholder">Processing...</p>';
+        
+        const inputData = JSON.parse(document.getElementById('inputData').value);
+        
+        const response = await fetch('{% url "tools:process" tool.slug %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(inputData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            outputDisplay.innerHTML = '<pre><code>' + JSON.stringify(result.data, null, 2) + '</code></pre>';
+            document.getElementById('tokensCount').textContent = result.usage.tokens;
+            document.getElementById('costAmount').textContent = result.usage.cost.toFixed(6);
+            usageInfo.style.display = 'flex';
+        } else {
+            outputDisplay.innerHTML = '<p class="error">' + result.error + '</p>';
+        }
+    } catch (error) {
+        outputDisplay.innerHTML = '<p class="error">Error: ' + (error.message || 'Invalid input format') + '</p>';
+    } finally {
+        button.disabled = false;
+        processingIndicator.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

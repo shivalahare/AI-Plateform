@@ -1,0 +1,7 @@
+django
+djangorestframework
+pillow
+python-dotenv
+django-cors-headers
+reportlab
+python-dateutil
