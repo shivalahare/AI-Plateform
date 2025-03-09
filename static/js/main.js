@@ -1,19 +1,42 @@
 // Theme toggler
 document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('themeToggle');
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
     
-    themeToggle.addEventListener('click', () => {
-        const html = document.documentElement;
-        const currentTheme = html.getAttribute('data-theme');
+    // Function to set theme
+    const setTheme = (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    };
+
+    // Function to toggle theme
+    const toggleTheme = () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        
-        html.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
+        setTheme(newTheme);
+    };
+
+    // Initialize theme
+    const initializeTheme = () => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else {
+            // If no saved theme, use system preference
+            const theme = prefersDarkScheme.matches ? 'dark' : 'light';
+            setTheme(theme);
+        }
+    };
+
+    // Add event listeners
+    themeToggle.addEventListener('click', toggleTheme);
+    prefersDarkScheme.addEventListener('change', (e) => {
+        const theme = e.matches ? 'dark' : 'light';
+        setTheme(theme);
     });
 
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    // Initialize theme on page load
+    initializeTheme();
 });
 
 // Form validation

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +17,6 @@
                 <div class="logo">
                     <a href="{% url 'home' %}">
                         <img src="{% static 'images/logo.svg' %}" alt="AI Platform" class="logo-img">
-                        <span class="logo-text">AI Platform</span>
                     </a>
                 </div>
 
@@ -50,6 +49,10 @@
                                 <a href="/support">Support</a>
                             </div>
                         </div>
+                        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                            <i class="fas fa-sun light-icon"></i>
+                            <i class="fas fa-moon dark-icon"></i>
+                        </button>
                     </div>
 
                     <div class="nav-auth">
@@ -126,7 +129,6 @@
                 <div class="footer-section">
                     <div class="footer-logo">
                         <img src="{% static 'images/logo.svg' %}" alt="AI Platform" class="logo-img">
-                        <span class="logo-text">AI Platform</span>
                     </div>
                     <p class="footer-description">
                         Empowering developers with advanced AI tools and solutions.

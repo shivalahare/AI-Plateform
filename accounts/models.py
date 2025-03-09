@@ -4,7 +4,18 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 class UserProfile(models.Model):
+    THEME_CHOICES = [
+        ('system', 'System Default'),
+        ('light', 'Light'),
+        ('dark', 'Dark'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    theme_preference = models.CharField(
+        max_length=10,
+        choices=THEME_CHOICES,
+        default='system'
+    )
     subscription_status = models.CharField(max_length=20, default='free')
     api_calls_count = models.IntegerField(default=0)
     company = models.CharField(max_length=100, blank=True)

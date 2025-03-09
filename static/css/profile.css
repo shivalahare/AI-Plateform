@@ -311,3 +311,27 @@
 .revoke-key-btn:hover {
     background-color: var(--danger-hover, #c82333);
 }
+
+/* Theme preference select styling */
+#id_theme_preference {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+#id_theme_preference:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-alpha);
+}
+
+#id_theme_preference option {
+    background-color: var(--background);
+    color: var(--text);
+    padding: 8px;
+}
